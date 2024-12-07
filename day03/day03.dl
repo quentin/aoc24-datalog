@@ -63,4 +63,36 @@
 
   part1.answer(value) :-
     value = sum val : multiplication_at(_, val).
+
+  .decl do_at(from:number)
+  do_at(from) :-
+    memory(content),
+    len = strlen(content),
+    from = range(0, len),
+    "do()" = substr(content, from, 4).
+
+  .decl dont_at(from:number)
+  dont_at(from) :-
+    memory(content),
+    len = strlen(content),
+    from = range(0, len),
+    "don't()" = substr(content, from, 7).
+
+  /// fake 'do' at position 0
+  do_at(0).
+  /// fake 'dont' at position -1
+  dont_at(-1).
+
+  /// Enabled multipliciation at `pos` with result value `val`.
+  .decl enabled_at(pos:number, val:number)
+  /// Multiplication is enabled if the latest `do` or `don't` is a `do`.
+  enabled_at(from, val) :-
+    multiplication_at(from, val),
+    last_do_at = max d : {do_at(d), d < from},
+    last_dont_at = max k : {dont_at(k), k < from},
+    last_dont_at < last_do_at.
+
+  part2.answer(value) :-
+    value = sum val : enabled_at(_, val).
+
 }
