@@ -1,0 +1,66 @@
+.include "puzzle.dl"
+
+.init day03 = _day03
+.comp _day03 : puzzle {
+
+  .decl memory(content:symbol)
+  .input memory(filename="input.facts", rfc4180=true)
+
+  /// `"mul"` at position `from`
+  .decl mul_at(from:number, to:number)
+  mul_at(from, from+3) :-
+    memory(content),
+    len = strlen(content),
+    from = range(0, len),
+    "mul" = substr(content, from, 3).
+
+  /// some character `c` at position `from`
+  .decl char_at(c:symbol, from:number)
+  char_at(c, from) :-
+    memory(content),
+    len = strlen(content),
+    from = range(0, len),
+    c = substr(content, from, 1).
+
+  .init utils = _utils
+
+  /// Some digit at position `from` with decimal value `val`.
+  .decl digit_at(from:number, val:number)
+  digit_at(from, val) :-
+    memory(content),
+    len = strlen(content),
+    from = range(0, len),
+    d = substr(content, from, 1),
+    utils.digit(val, d).
+
+  /// Some `1-3` digit number at `from` with decimal value `val`.
+  .decl number_at(from:number, to:number, val:number)
+  number_at(from, from+1, val) :-
+    digit_at(from, val),
+    !digit_at(from-1, _),
+    !digit_at(from+1, _).
+  number_at(from, from+2, 10*v1+v2) :-
+    digit_at(from, v1),
+    digit_at(from+1, v2),
+    !digit_at(from-1, _),
+    !digit_at(from+2, _).
+  number_at(from, from+3, 100*v1+10*v2+v3) :-
+    digit_at(from, v1),
+    digit_at(from+1, v2),
+    digit_at(from+2, v3),
+    !digit_at(from-1, _),
+    !digit_at(from+3, _).
+
+  /// Some multilplication at `from` with result value `val`.
+  .decl multiplication_at(from:number, val:number)
+  multiplication_at(from, lhs*rhs) :-
+    mul_at(from, lpar),
+    char_at("(", lpar),
+    number_at(lpar+1, comma, lhs),
+    char_at(",", comma),
+    number_at(comma+1, rpar, rhs),
+    char_at(")", rpar).
+
+  part1.answer(value) :-
+    value = sum val : multiplication_at(_, val).
+}
