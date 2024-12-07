@@ -1,0 +1,47 @@
+.include "puzzle.dl"
+
+.init day01 = _day01
+.comp _day01 : puzzle {
+
+  .decl side_by_side(line:number, left:number, right:number)
+  .input side_by_side(filename="input.facts", delimiter=" ")
+
+  .decl left_sorted(idx:number, val:number)
+  left_sorted(idx, val) :-
+    side_by_side(line, val, _),
+    idx = count:{side_by_side(_, v2, _), v2 < val}
+        + count:{side_by_side(l2, val, _), l2 < line}.
+
+  .decl right_sorted(idx:number, val:number)
+  right_sorted(idx, val) :-
+    side_by_side(line, _, val),
+    idx = count:{side_by_side(_, _, v2), v2 < val}
+        + count:{side_by_side(l2, _, val), l2 < line}.
+
+  .decl distance(idx:number, dist:number)
+  distance(idx, dist) :-
+    left_sorted(idx, l),
+    right_sorted(idx, r),
+    ( l >  r, dist = l - r
+    ; l <= r, dist = r - l
+    ).
+
+  part1.answer(value) :-
+    value = sum dist : distance(_, dist).
+
+  .decl right_occurrences(val:number, times: number)
+  right_occurrences(val, times) :-
+    // be 'val' a value from left list
+    side_by_side(_, val, _),
+    // count how many times it appears on the right list
+    times = count : side_by_side(_, _, val).
+
+  .decl non_zero_similarity_score_by_line(line:number, score:number)
+  non_zero_similarity_score_by_line(line, score) :-
+    side_by_side(line, val, _),
+    right_occurrences(val, times),
+    score = val * times.
+
+  part2.answer(value) :-
+    value = sum score : non_zero_similarity_score_by_line(_, score).
+}

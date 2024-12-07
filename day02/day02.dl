@@ -1,0 +1,82 @@
+.include "puzzle.dl"
+
+.init day02 = _day02
+.comp _day02 : puzzle {
+
+  .decl report(report:number, pos:number, level:number)
+  .input report(filename="input.facts", delimiter=" ")
+
+  .decl delta(report:number, delta:number)
+
+  delta(r, l2-l1) :-
+    report(r, pos, l1),
+    report(r, pos+1, l2).
+
+  .decl unsafe_report(report:number)
+
+  /// Report is unsafe if it contains both positive and negative delta.
+  unsafe_report(r) :-
+    delta(r, pos),
+    delta(r, neg),
+    pos > 0,
+    neg < 0.
+
+  /// Report is unsafe if is contains a delta out of safe range.
+  unsafe_report(r) :-
+    delta(r, dt),
+    ( dt < -3
+    ; dt > 3
+    ; dt > -1, dt < 1
+    ).
+
+  .decl safe_report(report:number)
+  /// Report is safe unless detected as unsafe.
+  safe_report(r) :-
+    report(r, _, _),
+    !unsafe_report(r).
+
+  part1.answer(value) :-
+    value = count : safe_report(_).
+
+  /// Report with skipped level at position `skip_pos`.
+  .decl delta_with_skip(report:number, skip_pos:number, delta:number)
+
+  /// Delta for two consecutive levels.
+  delta_with_skip(r, skip_pos, l2-l1) :-
+    report(r, skip_pos, _),
+    report(r, pos, l1),
+    report(r, pos+1, l2),
+    pos != skip_pos,
+    pos+1 != skip_pos.
+
+  /// Delta for two levels separated by a skipped level.
+  delta_with_skip(r, skip_pos, l2-l1) :-
+    report(r, skip_pos, _),
+    report(r, pos, l1),
+    report(r, pos+2, l2),
+    pos+1 = skip_pos.
+
+  .decl unsafe_report_with_skip(report:number, skip_pos:number)
+
+  unsafe_report_with_skip(r, skip_pos) :-
+    delta_with_skip(r, skip_pos, pos),
+    delta_with_skip(r, skip_pos, neg),
+    pos > 0,
+    neg < 0.
+
+  unsafe_report_with_skip(r, skip_pos) :-
+    delta_with_skip(r, skip_pos, dt),
+    ( dt < -3
+    ; dt > 3
+    ; dt > -1, dt < 1
+    ).
+
+  .decl safe_report_with_skip(r:number)
+  safe_report_with_skip(r) :-
+    report(r, skip_pos, _),
+    !unsafe_report_with_skip(r, skip_pos).
+
+  part2.answer(value) :-
+    value = count : safe_report_with_skip(_).
+}
+
