@@ -1,0 +1,80 @@
+.include "puzzle.dl"
+
+.init day04 = _day04
+.comp _day04 : puzzle {
+  .decl puzzle(line:number, chars:symbol)
+  .input puzzle(filename="input.facts", delimiter=" ")
+
+  .decl char_at(c:symbol, row:number, col:number)
+  char_at(c, row, col) :-
+    puzzle(row, chars),
+    len = strlen(chars),
+    col = range(0, len),
+    c = substr(chars, col, 1).
+
+  /// Directions:
+  /// `L` = left, `R` = right, `T` = top, `B` = bottom
+  .type Direction = LR{} | RL{} | TB{} | BT{} | TBLR{} | TBRL{} | BTLR{} | BTRL{}
+
+  .decl xmas(row:number, col:number, direction: Direction)
+  xmas(row, col, $LR()) :-
+    char_at("X", row, col),
+    char_at("M", row, col+1),
+    char_at("A", row, col+2),
+    char_at("S", row, col+3).
+  xmas(row, col, $RL()) :-
+    char_at("S", row, col),
+    char_at("A", row, col+1),
+    char_at("M", row, col+2),
+    char_at("X", row, col+3).
+  xmas(row, col, $TB()) :-
+    char_at("S", row, col),
+    char_at("A", row+1, col),
+    char_at("M", row+2, col),
+    char_at("X", row+3, col).
+  xmas(row, col, $BT()) :-
+    char_at("X", row, col),
+    char_at("M", row+1, col),
+    char_at("A", row+2, col),
+    char_at("S", row+3, col).
+  xmas(row, col, $TBLR()) :-
+    char_at("X", row, col),
+    char_at("M", row+1, col+1),
+    char_at("A", row+2, col+2),
+    char_at("S", row+3, col+3).
+  xmas(row, col, $TBRL()) :-
+    char_at("X", row, col),
+    char_at("M", row+1, col-1),
+    char_at("A", row+2, col-2),
+    char_at("S", row+3, col-3).
+  xmas(row, col, $BTLR()) :-
+    char_at("X", row, col),
+    char_at("M", row-1, col+1),
+    char_at("A", row-2, col+2),
+    char_at("S", row-3, col+3).
+  xmas(row, col, $BTRL()) :-
+    char_at("X", row, col),
+    char_at("M", row-1, col-1),
+    char_at("A", row-2, col-2),
+    char_at("S", row-3, col-3).
+
+  part1.answer(value) :-
+    value = count : xmas(_, _, _).
+
+  .decl cross_mas(row:number, col:number)
+  /// X-MAS is an A and two couples of diagonaly opposed M and S
+  cross_mas(row, col) :-
+    char_at("A", row, col),
+    char_at(a1, row-1, col-1),
+    char_at(a2, row+1, col+1),
+    char_at(b1, row-1, col+1),
+    char_at(b2, row+1, col-1),
+    ( a1 = "M", a2 = "S"
+    ; a1 = "S", a2 = "M"),
+    ( b1 = "M", b2 = "S"
+    ; b1 = "S", b2 = "M").
+
+  part2.answer(value) :-
+    value = count : cross_mas(_, _).
+
+}
