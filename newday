@@ -1,0 +1,38 @@
+#!/usr/bin/env ruby
+
+#
+# Usage: newday DAY SESSION [YEAR]
+#
+# - DAY is the puzzle day number (0 - 25)
+# - SESSION is your advent of code browser session id
+# - YEAR is the AoC year (4 digits)
+#
+
+raise "Missing day" unless ARGV[0] =~ /[0-9]+/
+day = ARGV[0]
+raise "Missing session" unless ARGV[1] =~ /[a-z0-9]+/
+session = ARGV[1]
+year = ARGV[2] || Time.now.year.to_s
+
+dayname = "day" + day.to_s.rjust(2, '0')
+
+unless File.directory?(dayname)
+  `mkdir ./#{dayname}`
+end
+unless File.exist?(File.join(dayname, "input"))
+  `./fetch_input #{day} #{session} #{year} > #{dayname}/input`
+end
+unless File.exist?(File.join(dayname, "#{dayname}.rb"))
+  template = <<-EOF
+.include "puzzle.dl"
+.init #{dayname} = _#{dayname}
+.comp _#{dayname} : puzzle {
+  part1.answer(0).
+  part2.answer(0).
+}
+EOF
+  File.open(File.join(dayname, "#{dayname}.rb"), "w") do |f|
+    f.puts template
+  end
+end
+
