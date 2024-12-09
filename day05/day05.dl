@@ -1,0 +1,65 @@
+.include "puzzle.dl"
+
+.init day05 = _day05
+.comp _day05 : puzzle {
+  .decl rules(left:number, right:number)
+  .input rules(filename="rules.facts", delimiter=" ")
+  .decl updates(update:number, pos:number, page:number)
+  .input updates(filename="updates.facts", delimiter=" ")
+
+  .decl incorrect(update:number)
+  incorrect(update) :-
+    updates(update, p1, v1),
+    updates(update, p2, v2),
+    p1 < p2,
+    rules(v2, v1).
+
+  /// middle-page of each updates
+  .decl middle_page(update:number, page:number)
+  middle_page(update, page) :-
+    updates(update, middle, page),
+    !incorrect(update),
+    middle = ((max p : updates(update, p, _)) + 1) / 2.
+
+  part1.answer(value) :-
+    value = sum page : middle_page(_, page).
+
+  /// ordering rules, applied transitively for pages of an update.
+  .decl update_transitive_rules(update:number, before:number, after:number)
+  update_transitive_rules(update, before, after) :-
+    incorrect(update),
+    updates(update, _, before),
+    updates(update, _, after),
+    rules(before, after).
+  update_transitive_rules(update, before, after) :-
+    update_transitive_rules(update, before, middle),
+    update_transitive_rules(update, middle, after).
+
+  /// In a given update, the position of a page is given by the number of rules
+  /// that place this page before another.
+  ///
+  /// Bad updates may assign the same location to several pages.
+  .decl maybe_fixed_updates(update:number, pos:number, page:number)
+  maybe_fixed_updates(update, pos, page) :-
+    updates(update, _, page),
+    pos = count : update_transitive_rules(update, _, page).
+
+  /// Filter bad updates, where two different pages have been assigned the
+  /// same position in `maybe_fixed_updates`.
+  .decl not_fixed_updates(update:number)
+  not_fixed_updates(update) :-
+    maybe_fixed_updates(update, pos, page),
+    maybe_fixed_updates(update, pos, other_page),
+    page < other_page.
+
+  /// Middle page of fixed updates.
+  .decl fixed_middle_page(update:number, page:number)
+  fixed_middle_page(update, page) :-
+    maybe_fixed_updates(update, middle, page),
+    !not_fixed_updates(update),
+    middle = ((max pos : maybe_fixed_updates(update, pos, _)) + 1) / 2.
+
+  part2.answer(value) :-
+    value = sum page : fixed_middle_page(_, page).
+
+}
