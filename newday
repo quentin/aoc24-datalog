@@ -22,7 +22,7 @@ end
 unless File.exist?(File.join(dayname, "input"))
   `./fetch_input #{day} #{session} #{year} > #{dayname}/input`
 end
-unless File.exist?(File.join(dayname, "#{dayname}.rb"))
+unless File.exist?(File.join(dayname, "#{dayname}.dl"))
   template = <<-EOF
 .include "puzzle.dl"
 .init #{dayname} = _#{dayname}
@@ -31,7 +31,7 @@ unless File.exist?(File.join(dayname, "#{dayname}.rb"))
   part2.answer(0).
 }
 EOF
-  File.open(File.join(dayname, "#{dayname}.rb"), "w") do |f|
+  File.open(File.join(dayname, "#{dayname}.dl"), "w") do |f|
     f.puts template
   end
 end
