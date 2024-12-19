@@ -1,0 +1,75 @@
+.include "puzzle.dl"
+.init day06 = _day06
+.comp _day06 : puzzle {
+  .decl map(row:number, line:symbol)
+  .input map(filename="map.facts", delimiter=" ")
+
+  .decl map_size(rows:number, cols:number)
+  map_size(rows, cols) :-
+    rows = 1 + max row : map(row, _),
+    map(0, line),
+    cols = strlen(line).
+
+  .decl map_guard(row:number, col:number)
+  map_guard(row, col) :-
+    map(row, line),
+    len = strlen(line),
+    col = range(0, len),
+    "^" = substr(line, col, 1).
+
+  .decl obstruction(row:number, col:number)
+  obstruction(row, col) :-
+    map(row, line),
+    len = strlen(line),
+    col = range(0, len),
+    "#" = substr(line, col, 1).
+
+  .decl step(row:number, col:number, delta_row:number, delta_col:number)
+
+  /// bootstrap with initial guard position and direction (up)
+  step(row, col, -1, 0) :-
+    map_guard(row, col).
+
+  /// step in the same direction
+  step(next_row, next_col, delta_row, delta_col) :-
+    step(row, col, delta_row, delta_col),
+    next_row = row + delta_row,
+    next_col = col + delta_col,
+    !obstruction(next_row, next_col),
+    map_size(row_count, col_count),
+    next_row >= 0,
+    next_row < row_count,
+    next_col >= 0,
+    next_col < col_count.
+
+  /// take a right turn
+  step(row, col, next_delta_row, next_delta_col) :-
+    step(row, col, delta_row, delta_col),
+    obstruction(row + delta_row, col + delta_col),
+    ( // moving up -> moving right
+      delta_row = -1, next_delta_row =  0, next_delta_col =  1
+    ; // moving down -> moving left
+      delta_row =  1, next_delta_row =  0, next_delta_col = -1
+    ; // moving right -> moving down
+      delta_col =  1, next_delta_row =  1, next_delta_col = 0
+    ; // moving left -> moving up
+      delta_col = -1, next_delta_row = -1, next_delta_col = 0
+    ).
+
+  .decl reachable(row:number, col:number)
+  reachable(row, col) :-
+    step(row, col, _, _).
+
+  part1.answer(value) :-
+    value = count : reachable(_, _).
+
+  // In part 1 we found N reachable cells from the initial guard position and direction.
+  //
+  // In part 2, we test N variations of the original path, each with an
+  // additional obstruction at at a different reachable cell. Variations
+  // that end-up outside the map are marked as non-loops.
+
+  .decl additional_obstruction(row:number, col:number, delta_row:number, delta_col:number)
+
+  part2.answer(0).
+}
