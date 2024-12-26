@@ -69,7 +69,63 @@
   // additional obstruction at at a different reachable cell. Variations
   // that end-up outside the map are marked as non-loops.
 
-  .decl additional_obstruction(row:number, col:number, delta_row:number, delta_col:number)
+  .decl additional_obstruction(row:number, col:number)
+  additional_obstruction(r, c) :-
+    reachable(r, c),
+    !map_guard(r, c).
 
-  part2.answer(0).
+  .decl obs_step(obs_row: number, obs_col: number, row:number, col:number, delta_row:number, delta_col:number)
+
+  obs_step(obs_row, obs_col, row, col, -1, 0) :-
+    additional_obstruction(obs_row, obs_col),
+    map_guard(row, col).
+
+  obs_step(obs_row, obs_col, next_row, next_col, delta_row, delta_col) :-
+    obs_step(obs_row, obs_col, row, col, delta_row, delta_col),
+    // we record one step that goes outside the map boundaries
+    map_size(row_count, col_count),
+    row >= 0,
+    row < row_count,
+    col >= 0,
+    col < col_count,
+    next_row = row + delta_row,
+    next_col = col + delta_col,
+    !obstruction(next_row, next_col),
+    // next position is not the additional obstruction
+    ( next_row != obs_row
+    ; next_col != obs_col
+    ).
+
+  obs_step(obs_row, obs_col, row, col, next_delta_row, next_delta_col) :-
+    obs_step(obs_row, obs_col, row, col, delta_row, delta_col),
+    ( obstruction(row + delta_row, col + delta_col)
+    ; obs_row = row + delta_row, obs_col = col + delta_col
+    ),
+    ( // moving up -> moving right
+      delta_row = -1, next_delta_row =  0, next_delta_col =  1
+    ; // moving down -> moving left
+      delta_row =  1, next_delta_row =  0, next_delta_col = -1
+    ; // moving right -> moving down
+      delta_col =  1, next_delta_row =  1, next_delta_col = 0
+    ; // moving left -> moving up
+      delta_col = -1, next_delta_row = -1, next_delta_col = 0
+    ).
+
+  .decl obs_not_loop(obs_row: number, obs_col: number)
+  obs_not_loop(obs_row, obs_col) :-
+    obs_step(obs_row, obs_col, row, col, _, _),
+    map_size(row_count, col_count),
+    ( row < 0
+    ; row >= row_count
+    ; col < 0
+    ; col >= col_count
+    ).
+
+  .decl obs_loop(obs_row: number, obs_col: number)
+  obs_loop(obs_row, obs_col) :-
+    additional_obstruction(obs_row, obs_col),
+    !obs_not_loop(obs_row, obs_col).
+
+  part2.answer(value) :-
+    value = count : obs_loop(_,_).
 }
