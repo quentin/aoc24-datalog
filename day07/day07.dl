@@ -1,0 +1,65 @@
+.include "puzzle.dl"
+.init day07 = _day07
+.comp _day07 : puzzle {
+  .decl equation(eq:number, result:number)
+  .decl operand(eq:number, pos:number, value:number)
+  .input equation(filename="equations.facts", delimiter=" ")
+  .input operand(filename="operands.facts", delimiter=" ")
+
+  /// Number of operators in equation `eq`
+  .decl eq_operators_count(eq:number, cnt:number)
+  eq_operators_count(eq, cnt) :-
+    equation(eq, _),
+    cnt = max pos : operand(eq, pos, _) - 1.
+
+  .decl operator_variation(eq:number, variation:number, pos:number, value:number)
+  operator_variation(eq, var, 0, value) :-
+    eq_operators_count(eq, cnt),
+    var = range(0, 2^(cnt+1)),
+    operand(eq, 0, value).
+  operator_variation(eq, var, pos+1, value) :-
+    operator_variation(eq, var, pos, lhs),
+    operand(eq, pos+1, rhs),
+    ( ((var bshr pos) band 1) = 1, value = lhs * rhs
+    ; ((var bshr pos) band 1) = 0, value = lhs + rhs
+    ).
+
+  .decl solved_equation(eq:number, result:number)
+  solved_equation(eq, result) :-
+    equation(eq, result),
+    eq_operators_count(eq, cnt),
+    operator_variation(eq, _, cnt+1, result).
+
+  part1.answer(value) :-
+    value = sum result : solved_equation(_, result).
+
+  .decl remaining_equation(eq:number, result:number)
+  remaining_equation(eq, result) :-
+    equation(eq, result),
+    !solved_equation(eq, _).
+
+  .decl operator_variation2(eq:number, variation:number, pos:number, value:number, goal:number)
+  operator_variation2(eq, var, 0, value, goal) :-
+    remaining_equation(eq, goal),
+    eq_operators_count(eq, cnt),
+    var = range(0, 3^(cnt+1)),
+    operand(eq, 0, value).
+  operator_variation2(eq, var, pos+1, value, goal) :-
+    operator_variation2(eq, var, pos, lhs, goal),
+    operand(eq, pos+1, rhs),
+    ( ((var / (3^pos)) % 3) = 0, value = lhs + rhs
+    ; ((var / (3^pos)) % 3) = 1, value = lhs * rhs
+    ; ((var / (3^pos)) % 3) = 2, value = to_number(cat(to_string(lhs), to_string(rhs)))
+    ),
+    value <= goal.
+
+  .decl solved_equation2(eq:number, result:number)
+  solved_equation2(eq, result) :-
+    remaining_equation(eq, _),
+    eq_operators_count(eq, cnt),
+    operator_variation2(eq, _, cnt+1, result, result).
+
+  part2.answer(value + part1) :-
+    value = sum result : solved_equation2(_, result),
+    part1.answer(part1).
+}
