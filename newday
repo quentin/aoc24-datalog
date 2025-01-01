@@ -19,6 +19,9 @@ dayname = "day" + day.to_s.rjust(2, '0')
 unless File.directory?(dayname)
   `mkdir ./#{dayname}`
 end
+unless File.exist?(File.join(dayname, "puzzle.md"))
+  `./fetch_puzzle #{day} #{session} #{year} > #{dayname}/puzzle.md`
+end
 unless File.exist?(File.join(dayname, "input"))
   `./fetch_input #{day} #{session} #{year} > #{dayname}/input`
 end
