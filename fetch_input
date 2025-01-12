@@ -6,7 +6,7 @@ raise "Missing day" unless ARGV[0] =~ /[0-9]+/
 day = ARGV[0]
 raise "Missing session" unless ARGV[1] =~ /[a-z0-9]+/
 session = ARGV[1]
-year = ARGV[2] || Time.now.year.to_s
+year = ARGV[2] || (Time.now.year - (Time.now.month < 12 ? 1 : 0)).to_s
 
 headers = {
   "Host": "adventofcode.com",
@@ -26,20 +26,8 @@ headers = {
   "TE": "trailers"
 }
 
-if false
-  # attempt to read puzzle
-  url = "https://adventofcode.com/#{year}/day/#{day}"
-  response = HTTParty.get(url, headers: headers)
-  begin
-    stdin, stdout, stderr, wait_thr = Open3.popen3("pandoc --from html --to markdown_strict")
-    stdin.write response.body
-    stdin.close
-    # Read and print output from the Ruby file
-    puts stdout.read
-  end
-end
-
 url = "https://adventofcode.com/#{year}/day/#{day}/input"
 response = HTTParty.get(url, headers: headers)
+raise response unless response.code == 200
 puts response.body
 

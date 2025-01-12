@@ -12,7 +12,7 @@ raise "Missing day" unless ARGV[0] =~ /[0-9]+/
 day = ARGV[0]
 raise "Missing session" unless ARGV[1] =~ /[a-z0-9]+/
 session = ARGV[1]
-year = ARGV[2] || Time.now.year.to_s
+year = ARGV[2] || (Time.now.year - (Time.now.month < 12 ? 1 : 0)).to_s
 
 dayname = "day" + day.to_s.rjust(2, '0')
 
