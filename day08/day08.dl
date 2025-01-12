@@ -1,0 +1,48 @@
+.include "puzzle.dl"
+.init day08 = _day08
+.comp _day08 : puzzle {
+
+  .decl input_map(row:number, col:number, char:symbol)
+  .input input_map(filename="map.facts", delimiter=" ")
+
+  /// Antenna coordinates and frequency
+  .decl antenna(row:number, col:number, freq:symbol)
+  antenna(row, col, freq) :-
+    input_map(row, col, freq),
+    freq != ".".
+
+  /// Map size
+  .decl map(rows:number, cols:number)
+  map(rows, cols) :-
+    rows = max r : input_map(r, _, _) + 1,
+    cols = max c : input_map(_, c, _) + 1.
+
+  /// Antinode coordinates
+  .decl antinode(row:number, col:number)
+  antinode(row, col) :-
+    // two antenna with matching frequency
+    antenna(r1, c1, freq),
+    antenna(r2, c2, freq),
+    // row and column delta
+    dr = r2 - r1,
+    dc = c2 - c1,
+    // at least one delta must be non-zero
+    ( dr != 0
+    ; dc != 0
+    ),
+    // antinode coordinates
+    ( row = r2 + dr, col = c2 + dc
+    ; row = r1 - dr, col = c1 - dc
+    ),
+    // antinode must be in map boundaries
+    map(rows, cols),
+    row >= 0,
+    row < rows,
+    col >= 0,
+    col < cols.
+
+  part1.answer(value) :-
+    value = count : antinode(_, _).
+
+  part2.answer(0).
+}
